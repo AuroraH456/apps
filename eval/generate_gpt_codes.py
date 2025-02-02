@@ -51,7 +51,7 @@ def reindent_code(codestr):
 
     return ret.getvalue()
 
-def generate_prompt(args, test_case, prompt, solutions, tokenizer, starter_code=None):
+def generate_prompt(args, test_case, prompt, solutions, starter_code=None):
     _input = "\nQUESTION:\n"
     data = prompt
     _input += data
@@ -71,31 +71,7 @@ def generate_prompt(args, test_case, prompt, solutions, tokenizer, starter_code=
     
     _input += "\nANSWER:\n"
 
-    if args.peeking > 0.0:
-        # Need to do some peeking. 
-
-        # Read one example solution
-        sols = solutions
-
-        # Choose the shortest solution for the model to use.
-        # This is so we can conserve tokens (1024 max)
-        # sample_sol = min(sols, key=len)
-
-        # # Add args.peeking% of that solution to the prompt
-        # sample_sol_token_ids = tokenizer.encode(sample_sol, verbose=False)
-        # num_to_keep = int(len(sample_sol_token_ids) * args.peeking)
-        # sample_sol_token_ids = sample_sol_token_ids[:num_to_keep]
-        # _input += tokenizer.decode(sample_sol_token_ids)
-
-        # Alternatively take a random solution
-        sample_sol = random.choice(sols)
-        rand_sol = reindent_code(sample_sol)
-        rand_sol = tokenizer.encode(rand_sol, verbose=False)
-        tokens_taken = int(args.peek_frac * len(rand_sol))
-        rand_sol = rand_sol[:tokens_taken]
-        _input += tokenizer.decode(rand_sol)
-    else:
-        sample_sol = None
+    sample_sol = None
 
     return _input, sample_sol
 
@@ -144,7 +120,7 @@ def main(args):
             starter_code = None
         
         # Read the question in
-        prompt_text, sample_sol = generate_prompt(args, test_case, prompt, solutions, tokenizer, starter_code)
+        prompt_text, sample_sol = generate_prompt(args, test_case, prompt, solutions, starter_code)
         if args.debug:
             print("PROMPT_TEXT:")
             print(prompt_text)
