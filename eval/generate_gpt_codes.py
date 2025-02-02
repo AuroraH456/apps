@@ -18,11 +18,33 @@ import torch
 from datasets import load_dataset
 from reindent import run as run_reindent
 from transformers import AutoTokenizer, AutoModelWithLMHead, AutoModelForCausalLM
+
+# added
 from huggingface_hub import InferenceClient
+import extract_code_from_answer
+import re
 
 # for timing and debugging
 from datetime import datetime, date
 from tqdm import tqdm
+
+def extract_content_between_keys(response, start_key, end_key):
+    # Define a regular expression pattern to match content between start_key and end_key
+    pattern = re.compile(re.escape(start_key) + r'(.*?)' + re.escape(end_key), re.DOTALL)
+
+    # Find all matches of the pattern
+    matches = pattern.findall(response)
+
+    if not matches:
+        print(f"No content found between '{start_key}' and '{end_key}'.")
+        return response
+
+    # Join all matched content
+    response = ''.join(matches)
+
+    print(f"Content between '{start_key}' and '{end_key}' has been extracted.")
+    return response
+
 
 
 def reindent_code(codestr):
@@ -143,6 +165,7 @@ def main(args):
             max_tokens=2000
         )
         output_str = str(completion.choices[0].message)
+        output_str = extract_content_between_keys(output_str, "```python", "```")
 
         # Save the generated sol
         gpt_codes[index+args.start] = output_str
