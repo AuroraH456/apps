@@ -159,7 +159,7 @@ def main(args):
             {
                 "role": "user",
                 "content": prompt
-        	}
+            }
         ]
         completion = client.chat.completions.create(
             model="microsoft/Phi-3.5-mini-instruct",
