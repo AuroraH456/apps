@@ -21,7 +21,6 @@ from transformers import AutoTokenizer, AutoModelWithLMHead, AutoModelForCausalL
 
 # added
 from huggingface_hub import InferenceClient
-import extract_code_from_answer
 import re
 
 # for timing and debugging
