@@ -18,6 +18,7 @@ import torch
 from datasets import load_dataset
 from reindent import run as run_reindent
 from transformers import AutoTokenizer, AutoModelWithLMHead, AutoModelForCausalLM
+from huggingface_hub import InferenceClient
 
 # for timing and debugging
 from datetime import datetime, date
@@ -161,34 +162,22 @@ def main(args):
             print(prompt_text)
         
         # Feed this into the model.
-        start = time.time()
-        try:
-            with torch.no_grad():
-                input_ids = torch.LongTensor(tokenizer.encode(prompt_text, verbose=False)).unsqueeze(0).to(device)
-                output_ids = model.generate(
-                    input_ids,
-                    num_beams=args.num_beams,
-                    early_stopping=True,
-                    max_length=1024 - len(input_ids)
-                )
-                output_str = tokenizer.decode(output_ids[0])
-        except Exception as e:
-            if isinstance(e, UnboundLocalError) and str(e) == "local variable 'next_tokens' referenced before assignment":
-                # See https://github.com/huggingface/transformers/issues/5118
-                if args.debug:
-                    print("Problem text was > 1024 tokens, so cannot do generation")
-                    print(e)
-            else:
-                print("Unexpected exception in generating solution")
-                print(e)
-            # Default to empty string on errors
-            output_str = ""
-        end = time.time()
-
-        if args.peeking == 1.0:
-            output_str = sample_sol
-        elif len(output_str):
-            output_str = output_str.split("ANSWER:\n")[1].replace("<|endoftext|>", "")
+        client = InferenceClient(
+        	#provider="hf-inference",
+        	api_key=args.API_key
+        )
+        messages = [
+        	{
+        		"role": "user",
+        		"content": prompt
+        	}
+        ]
+        completion = client.chat.completions.create(
+            model="microsoft/Phi-3.5-mini-instruct",
+        	messages=messages,
+        	max_tokens=2000
+        )
+        output_str = str(completion.choices[0].message)
 
         # Save the generated sol
         gpt_codes[index+args.start] = output_str
@@ -219,6 +208,7 @@ if __name__ == "__main__":
     parser.add_argument("-d", "--debug", action="store_true")
     parser.add_argument("--split", type=str, default="test", help="What split to use.")
     parser.add_argument("--save", type=str, default="./results")
+    parser.add_argument("--API_key", type=str, default="no api key!!")
  
     args = parser.parse_args()
 
