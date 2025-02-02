@@ -131,18 +131,6 @@ def main(args):
 
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    
-    if args.load:
-        # Set up model
-        # Tokenizer
-        tokenizer = transformers.GPT2Tokenizer.from_pretrained(args.arch)
-        print("Loading model...")
-        model = transformers.GPT2LMHeadModel.from_pretrained(args.load)
-        model.to(device)
-        print(f"Loaded {args.load}.")
-    else:
-        tokenizer = AutoTokenizer.from_pretrained(args.arch)
-        model = AutoModelForCausalLM.from_pretrained(args.arch, device_map="auto").eval()
 
     # main eval loop
     for index, problem in enumerate(tqdm(problems)):
@@ -154,13 +142,14 @@ def main(args):
         solutions = problem["solutions"]
         if not starter_code:
             starter_code = None
-
+        
         # Read the question in
         prompt_text, sample_sol = generate_prompt(args, test_case, prompt, solutions, tokenizer, starter_code)
         if args.debug:
             print("PROMPT_TEXT:")
             print(prompt_text)
-        
+            
+        # start of changes
         # Feed this into the model.
         client = InferenceClient(
         	#provider="hf-inference",
@@ -181,7 +170,8 @@ def main(args):
 
         # Save the generated sol
         gpt_codes[index+args.start] = output_str
-
+        # end of changes
+        
         if args.debug:
             print(f"Generation time: {end - start}")
             print(f"Generated output string:")
