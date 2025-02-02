@@ -153,10 +153,10 @@ def main(args):
         # Feed this into the model.
         client = InferenceClient(
         	#provider="hf-inference",
-        	api_key=args.API_key
+            api_key=args.API_key
         )
         messages = [
-        	{
+            {
         		"role": "user",
         		"content": prompt
         	}
