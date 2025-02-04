@@ -165,7 +165,8 @@ def main(args):
         )
         output_str = str(completion.choices[0].message)
         output_str = extract_content_between_keys(output_str, "```python", "```")
-
+        output_str = output_str.replace("\\n", "\n")
+        
         # Save the generated sol
         gpt_codes[index+args.start] = output_str
         # end of changes
