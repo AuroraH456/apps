@@ -19,9 +19,31 @@ from datasets import load_dataset
 from reindent import run as run_reindent
 from transformers import AutoTokenizer, AutoModelWithLMHead, AutoModelForCausalLM
 
+# added
+from huggingface_hub import InferenceClient
+import re
+
 # for timing and debugging
 from datetime import datetime, date
 from tqdm import tqdm
+
+def extract_content_between_keys(response, start_key, end_key):
+    # Define a regular expression pattern to match content between start_key and end_key
+    pattern = re.compile(re.escape(start_key) + r'(.*?)' + re.escape(end_key), re.DOTALL)
+
+    # Find all matches of the pattern
+    matches = pattern.findall(response)
+
+    if not matches:
+        print(f"No content found between '{start_key}' and '{end_key}'.")
+        return response
+
+    # Join all matched content
+    response = ''.join(matches)
+
+    print(f"Content between '{start_key}' and '{end_key}' has been extracted.")
+    return response
+
 
 
 def reindent_code(codestr):
@@ -50,7 +72,7 @@ def reindent_code(codestr):
 
     return ret.getvalue()
 
-def generate_prompt(args, test_case, prompt, solutions, tokenizer, starter_code=None):
+def generate_prompt(args, test_case, prompt, solutions, starter_code=None):
     _input = "\nQUESTION:\n"
     data = prompt
     _input += data
@@ -70,31 +92,7 @@ def generate_prompt(args, test_case, prompt, solutions, tokenizer, starter_code=
     
     _input += "\nANSWER:\n"
 
-    if args.peeking > 0.0:
-        # Need to do some peeking. 
-
-        # Read one example solution
-        sols = solutions
-
-        # Choose the shortest solution for the model to use.
-        # This is so we can conserve tokens (1024 max)
-        # sample_sol = min(sols, key=len)
-
-        # # Add args.peeking% of that solution to the prompt
-        # sample_sol_token_ids = tokenizer.encode(sample_sol, verbose=False)
-        # num_to_keep = int(len(sample_sol_token_ids) * args.peeking)
-        # sample_sol_token_ids = sample_sol_token_ids[:num_to_keep]
-        # _input += tokenizer.decode(sample_sol_token_ids)
-
-        # Alternatively take a random solution
-        sample_sol = random.choice(sols)
-        rand_sol = reindent_code(sample_sol)
-        rand_sol = tokenizer.encode(rand_sol, verbose=False)
-        tokens_taken = int(args.peek_frac * len(rand_sol))
-        rand_sol = rand_sol[:tokens_taken]
-        _input += tokenizer.decode(rand_sol)
-    else:
-        sample_sol = None
+    sample_sol = None
 
     return _input, sample_sol
 
@@ -130,18 +128,6 @@ def main(args):
 
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    
-    if args.load:
-        # Set up model
-        # Tokenizer
-        tokenizer = transformers.GPT2Tokenizer.from_pretrained(args.arch)
-        print("Loading model...")
-        model = transformers.GPT2LMHeadModel.from_pretrained(args.load)
-        model.to(device)
-        print(f"Loaded {args.load}.")
-    else:
-        tokenizer = AutoTokenizer.from_pretrained(args.arch)
-        model = AutoModelForCausalLM.from_pretrained(args.arch, device_map="auto").eval()
 
     # main eval loop
     for index, problem in enumerate(tqdm(problems)):
@@ -153,46 +139,38 @@ def main(args):
         solutions = problem["solutions"]
         if not starter_code:
             starter_code = None
-
+        
         # Read the question in
-        prompt_text, sample_sol = generate_prompt(args, test_case, prompt, solutions, tokenizer, starter_code)
+        prompt_text, sample_sol = generate_prompt(args, test_case, prompt, solutions, starter_code)
         if args.debug:
             print("PROMPT_TEXT:")
             print(prompt_text)
-        
+            
+        # start of changes
         # Feed this into the model.
-        start = time.time()
-        try:
-            with torch.no_grad():
-                input_ids = torch.LongTensor(tokenizer.encode(prompt_text, verbose=False)).unsqueeze(0).to(device)
-                output_ids = model.generate(
-                    input_ids,
-                    num_beams=args.num_beams,
-                    early_stopping=True,
-                    max_length=1024 - len(input_ids)
-                )
-                output_str = tokenizer.decode(output_ids[0])
-        except Exception as e:
-            if isinstance(e, UnboundLocalError) and str(e) == "local variable 'next_tokens' referenced before assignment":
-                # See https://github.com/huggingface/transformers/issues/5118
-                if args.debug:
-                    print("Problem text was > 1024 tokens, so cannot do generation")
-                    print(e)
-            else:
-                print("Unexpected exception in generating solution")
-                print(e)
-            # Default to empty string on errors
-            output_str = ""
-        end = time.time()
-
-        if args.peeking == 1.0:
-            output_str = sample_sol
-        elif len(output_str):
-            output_str = output_str.split("ANSWER:\n")[1].replace("<|endoftext|>", "")
-
+        client = InferenceClient(
+        	#provider="hf-inference",
+            api_key=args.API_key
+        )
+        messages = [
+            {
+                "role": "user",
+                "content": prompt
+            }
+        ]
+        completion = client.chat.completions.create(
+            model="microsoft/Phi-3.5-mini-instruct",
+            messages=messages,
+            max_tokens=2000
+        )
+        output_str = str(completion.choices[0].message)
+        output_str = extract_content_between_keys(output_str, "```python", "```")
+        output_str = output_str.replace("\\n", "\n")
+        
         # Save the generated sol
         gpt_codes[index+args.start] = output_str
-
+        # end of changes
+        
         if args.debug:
             print(f"Generation time: {end - start}")
             print(f"Generated output string:")
@@ -219,6 +197,7 @@ if __name__ == "__main__":
     parser.add_argument("-d", "--debug", action="store_true")
     parser.add_argument("--split", type=str, default="test", help="What split to use.")
     parser.add_argument("--save", type=str, default="./results")
+    parser.add_argument("--API_key", type=str, default="no api key!!")
  
     args = parser.parse_args()
 
