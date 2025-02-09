@@ -20,8 +20,9 @@ from reindent import run as run_reindent
 from transformers import AutoTokenizer, AutoModelWithLMHead, AutoModelForCausalLM
 
 # added
-from huggingface_hub import InferenceClient
+#from huggingface_hub import InferenceClient
 import re
+from openai import OpenAI
 
 # for timing and debugging
 from datetime import datetime, date
@@ -148,25 +149,24 @@ def main(args):
             
         # start of changes
         # Feed this into the model.
-        client = InferenceClient(
-        	#provider="hf-inference",
+        
+        client = OpenAI(
             api_key=args.API_key
         )
-        messages = [
-            {
-                "role": "user",
-                "content": prompt
-            }
-        ]
+        
         completion = client.chat.completions.create(
-            model="microsoft/Phi-3.5-mini-instruct",
-            messages=messages,
-            max_tokens=2000
+            messages=[
+                {
+                    "role": "user",
+                    "content": prompt,
+                }
+            ],
+            model="gpt-3.5-turbo",
         )
+        # change \\n to \n
         output_str = str(completion.choices[0].message)
         output_str = extract_content_between_keys(output_str, "```python", "```")
         output_str = output_str.replace("\\n", "\n")
-        
         # Save the generated sol
         gpt_codes[index+args.start] = output_str
         # end of changes
