@@ -93,7 +93,7 @@ def generate_prompt(args, test_case, prompt, solutions, starter_code=None):
         _input += "\nUse Standard Input format"#\n"
     else:
         _input += "\nUse Call-Based format"#\n"
-    
+    _input += "\nWrite a program that can compute the output in 1 second for any input within the input range" #added
     _input += "\PLAN:\n" # changed
 
     sample_sol = None
