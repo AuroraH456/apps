@@ -74,7 +74,10 @@ def reindent_code(codestr):
     return ret.getvalue()
 
 def generate_prompt(args, test_case, prompt, solutions, starter_code=None):
-    _input = "\nQUESTION:\n"
+    with open('prompt.txt', 'r') as file: #read in the prompt
+        _input = file.read()
+    _input += "\nQUESTION:\n"
+    
     data = prompt
     _input += data
     if starter_code != None:
@@ -91,7 +94,7 @@ def generate_prompt(args, test_case, prompt, solutions, starter_code=None):
     else:
         _input += "\nUse Call-Based format"#\n"
     
-    _input += "\nANSWER:\n"
+    _input += "\PLAN:\n" # changed
 
     sample_sol = None
 
