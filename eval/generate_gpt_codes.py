@@ -20,8 +20,9 @@ from reindent import run as run_reindent
 from transformers import AutoTokenizer, AutoModelWithLMHead, AutoModelForCausalLM
 
 # added
-from huggingface_hub import InferenceClient
+#from huggingface_hub import InferenceClient
 import re
+from openai import OpenAI
 
 # for timing and debugging
 from datetime import datetime, date
@@ -73,7 +74,11 @@ def reindent_code(codestr):
     return ret.getvalue()
 
 def generate_prompt(args, test_case, prompt, solutions, starter_code=None):
-    _input = "\nQUESTION:\n"
+    _input = ""
+    with open("apps/eval/prompt.txt", 'r') as file: #read in the prompt
+        _input = file.read()
+    _input += "\nQUESTION:\n"
+    
     data = prompt
     _input += data
     if starter_code != None:
@@ -85,12 +90,16 @@ def generate_prompt(args, test_case, prompt, solutions, starter_code=None):
         pass
 
     data = test_case
+    _input += "\n\n"
     if not data.get("fn_name"):
         _input += "\nUse Standard Input format"#\n"
     else:
         _input += "\nUse Call-Based format"#\n"
-    
-    _input += "\nANSWER:\n"
+    #_input += "\nFormulate a plan and write a program in the same format as the exemplar given above."
+    #_input += "\nAlso make sure the input and output formats are exactly as instructed."
+    _input += "\n\nFirst, generate a step-by-step plan to solve the problem."
+    _input += "\nThen, solve this question using python. Take inputs and give outputs exactly as instructed. Do not give any extraneous outputs."
+    _input += "\nMake sure the program can compute the output in 1 second for any input within the input range" #added
 
     sample_sol = None
 
@@ -148,25 +157,25 @@ def main(args):
             
         # start of changes
         # Feed this into the model.
-        client = InferenceClient(
-        	#provider="hf-inference",
+        
+        client = OpenAI(
             api_key=args.API_key
         )
-        messages = [
-            {
-                "role": "user",
-                "content": prompt
-            }
-        ]
-        completion = client.chat.completions.create(
-            model="microsoft/Phi-3.5-mini-instruct",
-            messages=messages,
-            max_tokens=2000
-        )
-        output_str = str(completion.choices[0].message)
-        output_str = extract_content_between_keys(output_str, "```python", "```")
-        output_str = output_str.replace("\\n", "\n")
         
+        completion = client.chat.completions.create(
+            messages=[
+                {
+                    "role": "user",
+                    "content": prompt_text,
+                }
+            ],
+            model="gpt-3.5-turbo",
+        )
+        # change \\n to \n
+        output_str = str(completion.choices[0].message)
+        output_str = output_str.replace("\\n", "\n")
+        orig_output = output_str
+        output_str = extract_content_between_keys(output_str, "```python", "```")
         # Save the generated sol
         gpt_codes[index+args.start] = output_str
         # end of changes
@@ -174,7 +183,7 @@ def main(args):
         if args.debug:
             print(f"Generation time: {end - start}")
             print(f"Generated output string:")
-            print(output_str)
+            print(orig_output)
             print("------------------------------------------------------------")
 
     with open(codes_loc, "w") as f:
