@@ -52,6 +52,21 @@ def print_results(results: Dict, args:argparse.Namespace=None):
         print(f"number of runtime errors = {runtime_errors} avg = {runtime_errors / total_testcases}")
         print(f"number of test cases run = {total_testcases}")
 
+    # added
+
+    ave_res = os.path.join(args.save, f"average_results.txt")
+    strict_res = os.path.join(args.save, f"strict_results.txt")
+    with open (ave_res, "w") as f:
+      json.dump(per_prob_res, f)
+    with open(strict_res, "w") as f:
+      json.dump(all_correct, f)
+    #with open(ave_res, "w") as f:
+    #    f.write(",".join(map(str, per_prob_res)))
+    #with open(strict_res, "w") as f:
+    #    f.write(",".join(map(str, all_correct)))
+
+    # end of addition
+
     print(f"Test Case Average (average accuracy over problems) = {np.mean(per_prob_res)}")
     print(f"Strict Accuracy (all test cases passed / total problems) = {np.mean(all_correct)}")
 
