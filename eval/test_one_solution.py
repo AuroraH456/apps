@@ -238,7 +238,7 @@ if __name__ == "__main__":
     parser.add_argument("--save", type=str, default="./results", help="Where the evaluated data is loaded from and results saved to.")
     parser.add_argument("--split", type=str, default="test", help="What split to use.")
     parser.add_argument("--stop-early", default=None, type=int)
-    parser.add_argument("--problemset", type=string, default="no problemset!!")
+    parser.add_argument("--problemset", type=str, default="no problemset!!")
  
     args = parser.parse_args()
 
