@@ -207,7 +207,7 @@ if __name__ == "__main__":
     parser.add_argument("--split", type=str, default="test", help="What split to use.")
     parser.add_argument("--save", type=str, default="./results")
     parser.add_argument("--API_key", type=str, default="no api key!!")
-    parser.add_argument("-problemset", type=str)
+    parser.add_argument("--problemset", type=str, default = "no problemset!!")
  
     args = parser.parse_args()
 
