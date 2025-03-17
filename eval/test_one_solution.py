@@ -41,7 +41,7 @@ def print_results(results: Dict, args:argparse.Namespace=None):
         problem_results = np.asarray(results[index])
         res.extend(problem_results)
         per_prob_res.append(np.mean(problem_results > 0))
-        all_correct.append(np.all(problem_results > 0))
+        all_correct.append(bool(np.all(problem_results > 0)))
 
     # We count both compile errors and runtime errors for multiple tests as one error.
     compile_errors = len([e for e in res if -2 in e])
