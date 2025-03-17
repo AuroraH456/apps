@@ -99,7 +99,7 @@ def check_correctness(problem, generation, timeout, debug):
 
 
 def eval_and_save_problems(args):
-    problems = load_dataset("codeparrot/apps", split=f"{args.split}")
+    problems = load_dataset(args.problemset, split=f"{args.split}")
 
     codes = {}
     gpt_bleu = {}
@@ -120,7 +120,7 @@ def eval_and_save_problems(args):
 
     # Only do the problems that are specified.
     if args.index:
-        problems = load_dataset("codeparrot/apps", split=f"{args.split}[{args.index}]")
+        problems = load_dataset(args.problemset, split=f"{args.split}[{args.index}]")
     else:
         if args.start > len(problems) or args.start < 0:
             print(f"start index {args.start} > number of problems {len(problems)}")
@@ -130,10 +130,10 @@ def eval_and_save_problems(args):
             end = len(problems)
         else:
             end = args.end
-        problems = load_dataset("codeparrot/apps", split=f"{args.split}[{start}:{end}]")
+        problems = load_dataset(args.problemset, split=f"{args.split}[{start}:{end}]")
 
     if args.stop_early:
-        problems = load_dataset("codeparrot/apps", split=f"{args.split}[{start}:{args.stop_early}]")
+        problems = load_dataset(args.problemset, split=f"{args.split}[{start}:{args.stop_early}]")
 
     # main eval loop
     for index, problem in enumerate(tqdm(problems)):
@@ -238,6 +238,7 @@ if __name__ == "__main__":
     parser.add_argument("--save", type=str, default="./results", help="Where the evaluated data is loaded from and results saved to.")
     parser.add_argument("--split", type=str, default="test", help="What split to use.")
     parser.add_argument("--stop-early", default=None, type=int)
+    parser.add_argument("--problemset", type=string, default="no problemset!!")
  
     args = parser.parse_args()
 
