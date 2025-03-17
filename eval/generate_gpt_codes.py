@@ -111,7 +111,7 @@ def main(args):
     argsdict = vars(args)
     print(pprint.pformat(argsdict))
 
-    problems = load_dataset("codeparrot/apps", split=f"{args.split}")
+    problems = load_dataset(problemset, split=f"{args.split}")
 
     gpt_codes = {}
     if not os.path.exists(args.save):
@@ -123,7 +123,7 @@ def main(args):
 
     # Only do the problems that are specified.
     if args.index:
-        problems = load_dataset("codeparrot/apps", split=f"{args.split}[{args.index}]")
+        problems = load_dataset(problemset, split=f"{args.split}[{args.index}]")
     else:
         if args.start > len(problems) or args.start < 0:
             print(f"start index {args.start} > number of problems {len(problems)}")
@@ -133,7 +133,7 @@ def main(args):
             end = len(problems)
         else:
             end = args.end
-        problems = load_dataset("codeparrot/apps", split=f"{args.split}[{start}:{end}]")
+        problems = load_dataset(problemset, split=f"{args.split}[{start}:{end}]")
 
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -207,6 +207,7 @@ if __name__ == "__main__":
     parser.add_argument("--split", type=str, default="test", help="What split to use.")
     parser.add_argument("--save", type=str, default="./results")
     parser.add_argument("--API_key", type=str, default="no api key!!")
+    parser.add_argument("-problemset", type=str)
  
     args = parser.parse_args()
 
