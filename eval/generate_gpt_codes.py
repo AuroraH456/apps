@@ -174,6 +174,7 @@ def main(args):
         # change \\n to \n
         output_str = str(completion.choices[0].message)
         output_str = output_str.replace("\\n", "\n")
+        output_str = output_str.replace("\\'", "\'")
         orig_output = output_str
         output_str = extract_content_between_keys(output_str, "```python", "```")
         # Save the generated sol
