@@ -56,14 +56,14 @@ def print_results(results: Dict, args:argparse.Namespace=None):
 
     ave_res = os.path.join(args.save, f"average_results.txt")
     strict_res = os.path.join(args.save, f"strict_results.txt")
-    with open (ave_res, "w") as f:
-      json.dump(per_prob_res, f)
-    with open(strict_res, "w") as f:
-      json.dump(all_correct, f)
-    #with open(ave_res, "w") as f:
-    #    f.write(",".join(map(str, per_prob_res)))
+    #with open (ave_res, "w") as f:
+    #  json.dump(per_prob_res, f)
     #with open(strict_res, "w") as f:
-    #    f.write(",".join(map(str, all_correct)))
+    #  json.dump(all_correct, f)
+    with open(ave_res, "w") as f:
+        f.write(",".join(map(str, per_prob_res)))
+    with open(strict_res, "w") as f:
+        f.write(",".join(map(str, all_correct)))
 
     # end of addition
 
