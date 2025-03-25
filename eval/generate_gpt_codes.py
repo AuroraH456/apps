@@ -92,14 +92,9 @@ def generate_prompt(args, test_case, prompt, solutions, starter_code=None):
     data = test_case
     _input += "\n\n"
     if not data.get("fn_name"):
-        _input += "\nUse Standard Input format"#\n"
+        _input += "\nUse Standard Input format\n"
     else:
-        _input += "\nUse Call-Based format"#\n"
-    #_input += "\nFormulate a plan and write a program in the same format as the exemplar given above."
-    #_input += "\nAlso make sure the input and output formats are exactly as instructed."
-    #_input += "\n\nFirst, generate a step-by-step plan to solve the problem."
-    #_input += "\nThen, solve this question using python. Take inputs and give outputs exactly as instructed. Do not give any extraneous outputs."
-    #_input += "\nMake sure the program can compute the output in 1 second for any input within the input range" #added
+        _input += "\nUse Call-Based format\n"
     instr = ""
     with open("apps/eval/instruction.txt", 'r') as file: #read in the prompt
         instr = file.read()
