@@ -95,10 +95,10 @@ def generate_prompt(args, test_case, prompt, solutions, starter_code=None):
         _input += "\nUse Standard Input format\n"
     else:
         _input += "\nUse Call-Based format\n"
-    instr = ""
-    with open("apps/eval/instruction.txt", 'r') as file: #read in the prompt
-        instr = file.read()
-    _input += instr
+    #instr = ""
+    #with open("apps/eval/instruction.txt", 'r') as file: #read in the prompt
+    #    instr = file.read()
+    #_input += instr
     sample_sol = None
 
     return _input, sample_sol
