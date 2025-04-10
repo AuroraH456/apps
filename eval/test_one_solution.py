@@ -61,9 +61,11 @@ def print_results(results: Dict, args:argparse.Namespace=None):
     #with open(strict_res, "w") as f:
     #  json.dump(all_correct, f)
     with open(ave_res, "w") as f:
-        f.write(",".join(map(str, per_prob_res)))
+        #f.write(",".join(map(str, per_prob_res)))
+        f.write(str(per_prob_res))
     with open(strict_res, "w") as f:
-        f.write(",".join(map(str, all_correct)))
+        #f.write(",".join(map(str, all_correct)))
+        f.write(str(all_correct))
 
     # end of addition
 
