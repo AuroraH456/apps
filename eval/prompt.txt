@@ -1,3 +1,5 @@
+Solve programming problems with Python.
+
 QUESTION:
 Anton has the integer x. He is interested what positive integer, which doesn't exceed x, has the maximum sum of digits.
 
